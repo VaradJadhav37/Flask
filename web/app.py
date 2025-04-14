@@ -1,9 +1,21 @@
 from flask import Flask, request
 from flask_restful import Api, Resource
-
+import os
+from pymongo import MongoClient
 app = Flask(__name__)
 api = Api(app)
+client = MongoClient('mongodb+srv://VaradJ:varad21@cluster0.vpdku.mongodb.net/flask?retryWrites=true&w=majority&appName=Cluster0')
 
+db=client.aNewDB
+UserNum=db["UserNum"]
+UserNum.insert_one({
+    'numofusers': 0,
+})
+class Visit(Resource):
+    def get(self):
+        prev_num=UserNum.find({})[0]["numofusers"]
+        UserNum.update_one({}, {"$set": {'numofusers': prev_num+1}})
+        return str('Hello, World! You are visitor number: ' + str(prev_num+1))
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
@@ -38,6 +50,6 @@ class Subtract(Resource):
         return {'result': result}
 
 api.add_resource(Subtract, '/subtract')
-
+api.add_resource(Visit, '/hello')
 if __name__ == '__main__':
     app.run(host='0.0.0.0',debug=True)
